@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
@@ -32,7 +33,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User updateUser(User user) {
         if (!users.containsKey(user.getId())) {
-            throw new IllegalArgumentException(String.format("Пользователя с id: %s не существует.", user.getId()));
+            throw new NotFoundException(String.format("Пользователя с id: %s не существует.", user.getId()));
         }
         users.put(user.getId(), user);
         log.debug("Update user {}", user);
@@ -42,7 +43,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public void addFriend(Long id, Long friendId) {
         if (users.get(id) == null || users.get(friendId) == null || id.equals(friendId)) {
-            throw new IllegalArgumentException("Недопустимые пользователи для дружбы");
+            throw new NotFoundException("Недопустимые пользователи для дружбы");
         }
         userFriends.computeIfAbsent(users.get(id), k -> new HashSet<>()).add(users.get(friendId));
         userFriends.computeIfAbsent(users.get(friendId), k -> new HashSet<>()).add(users.get(id));
@@ -52,7 +53,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public void removeFriend(Long id, Long friendId) {
         if (users.get(id) == null || users.get(friendId) == null) {
-            throw new IllegalArgumentException("Пользователи не могут быть null");
+            throw new NotFoundException("Пользователи не могут быть null");
         }
         if (userFriends.containsKey(users.get(id))) {
             userFriends.get(users.get(id)).remove(users.get(friendId));
@@ -66,7 +67,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public Collection<User> getFriends(Long id) {
         if (users.get(id) == null) {
-            throw new IllegalArgumentException("Пользователь null");
+            throw new NotFoundException("Пользователь null");
         }
         return userFriends.getOrDefault(users.get(id), Collections.emptySet());
     }
@@ -74,7 +75,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public Collection<User> getCommonFriends(Long id, Long friendId) {
         if (users.get(id) == null || users.get(friendId) == null) {
-            throw new IllegalArgumentException("Пользователи не могут быть null");
+            throw new NotFoundException("Пользователи не могут быть null");
         }
 
         Set<User> friends1 = userFriends.getOrDefault(users.get(id), Collections.emptySet());
@@ -84,6 +85,11 @@ public class InMemoryUserStorage implements UserStorage {
         mutualFriends.retainAll(friends2);
 
         return mutualFriends;
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return users.containsKey(id);
     }
 
     private long getNextId() {

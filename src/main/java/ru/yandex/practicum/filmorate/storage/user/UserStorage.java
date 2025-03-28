@@ -18,5 +18,7 @@ public interface UserStorage {
 
     Collection<User> getFriends(Long id);
 
-    Collection<User> getCommonFriends(Long id , Long friendId);
+    Collection<User> getCommonFriends(Long id, Long friendId);
+
+    boolean existsById(Long id);
 }
