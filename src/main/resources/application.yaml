@@ -1,0 +1,6 @@
+logging:
+  level:
+    ru.yandex.practicum.filmorate: DEBUG
+    org.zalando.logbook: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %level - %msg%n"
