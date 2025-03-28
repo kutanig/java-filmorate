@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -18,21 +18,38 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    private ErrorResponse handlerValidation(final ValidationException e) {
+    public ErrorResponse handleValidationException(final ValidationException e) {
         log.warn("Validation error: {}", e.getMessage());
-        return new ErrorResponse(e.getMessage());
+        return new ErrorResponse("Validation error", e.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    private ErrorResponse handleValidationExceptions(MethodArgumentNotValidException e) {
-        Map<String, String> errors = new HashMap<>();
-        e.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+    public Map<String, String> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+        Map<String, String> errors = e.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        fieldError -> fieldError.getDefaultMessage() != null
+                                ? fieldError.getDefaultMessage()
+                                : "No error message available"
+                ));
+
         log.warn("Validation errors: {}", errors);
-        return new ErrorResponse(e.getMessage());
+        return errors;
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleIllegalArgumentException(final IllegalArgumentException e) {
+        log.warn("Not found error: {}", e.getMessage());
+        return new ErrorResponse("Not found", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleThrowable(final Throwable e) {
+        log.error("Unexpected error: {}", e.getMessage(), e);
+        return new ErrorResponse("Internal server error",
+                "An unexpected error occurred. Please contact support.");
     }
 }

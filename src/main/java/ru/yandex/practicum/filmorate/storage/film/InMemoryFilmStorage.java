@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
@@ -13,19 +12,8 @@ public class InMemoryFilmStorage implements FilmStorage{
 
     private final Map<Long, Film> films = new HashMap<>();
 
-    @Override
     public Collection<Film> filmsAll() {
         return new ArrayList<>(films.values());
-    }
-
-    @Override
-    public Film getFilmById(Long id) {
-        return null;
-    }
-
-    @Override
-    public Film removeFilmById(Long id) {
-        return null;
     }
 
     @Override
@@ -39,7 +27,7 @@ public class InMemoryFilmStorage implements FilmStorage{
     @Override
     public Film updateFilm(Film film) {
         if (!films.containsKey(film.getId())) {
-            throw new ValidationException(String.format("Фильма с id: %s не существует.", film.getId()));
+            throw new IllegalArgumentException(String.format("Фильма с id: %s не существует.", film.getId()));
         }
         films.put(film.getId(), film);
         log.debug("Update film {}", film);
