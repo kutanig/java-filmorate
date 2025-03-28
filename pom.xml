@@ -21,9 +21,11 @@
 		<maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
 		<junit-jupiter.version>5.9.2</junit-jupiter.version>
 		<mockito.version>5.3.1</mockito.version>
+		<byte-buddy.version>1.14.13</byte-buddy.version>
 	</properties>
 
 	<dependencies>
+		<!-- Основные зависимости -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -37,6 +39,18 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.zalando</groupId>
+			<artifactId>logbook-spring-boot-starter</artifactId>
+			<version>3.7.2</version>
+		</dependency>
+
+		<!-- Тестовые зависимости -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 			<exclusions>
@@ -48,33 +62,37 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.zalando</groupId>
-			<artifactId>logbook-spring-boot-starter</artifactId>
-			<version>3.7.2</version>
-		</dependency>
-
-		<!-- Явные тестовые зависимости -->
-		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
 			<version>${junit-jupiter.version}</version>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
 			<version>${junit-jupiter.version}</version>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>net.bytebuddy</groupId>
+			<artifactId>byte-buddy</artifactId>
+			<version>${byte-buddy.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>net.bytebuddy</groupId>
+			<artifactId>byte-buddy-agent</artifactId>
+			<version>${byte-buddy.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -84,6 +102,14 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
 			</plugin>
 
 			<plugin>
@@ -92,8 +118,10 @@
 				<version>${maven-surefire-plugin.version}</version>
 				<configuration>
 					<argLine>
-						-XX:+EnableDynamicAgentLoading
-						-Djdk.instrument.traceUsage=false
+						--add-opens=java.base/java.lang=ALL-UNNAMED
+						--add-opens=java.base/java.util=ALL-UNNAMED
+						-XX:+IgnoreUnrecognizedVMOptions
+						-Djdk.attach.allowAttachSelf=true
 						-Dfile.encoding=UTF-8
 					</argLine>
 					<includes>
@@ -111,7 +139,24 @@
 					<source>${java.version}</source>
 					<target>${java.version}</target>
 					<encoding>UTF-8</encoding>
+					<compilerArgs>
+						<arg>-parameters</arg>
+					</compilerArgs>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.1.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
