@@ -27,9 +27,6 @@ public class FilmService {
     }
 
     public Film getFilmById(Long id) {
-        if (id == null) {
-            throw new ValidationException("ID фильма не может быть null");
-        }
         return filmStorage.getFilmById(id)
                 .orElseThrow(() -> new NotFoundException("Фильм с ID " + id + " не найден"));
     }
@@ -42,9 +39,6 @@ public class FilmService {
     }
 
     public Film updateFilm(Film film) {
-        if (film == null) {
-            throw new ValidationException("Фильм не может быть null");
-        }
         if (film.getDuration().isNegative() || film.getDuration().isZero()) {
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }

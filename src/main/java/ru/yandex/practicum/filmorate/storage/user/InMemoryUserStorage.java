@@ -6,13 +6,14 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 public class InMemoryUserStorage implements UserStorage {
 
     private final Map<Long, User> users = new HashMap<>();
-    private final Map<User, Set<User>> userFriends = new HashMap<>();
+    private long nextId = 1;
 
     @Override
     public Collection<User> getAllUsers() {
@@ -24,80 +25,61 @@ public class InMemoryUserStorage implements UserStorage {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-        user.setId(getNextId());
+        user.setId(nextId++);
         users.put(user.getId(), user);
-        log.debug("Add user {}", user);
+        log.debug("Добавлен пользователь: {}", user);
         return user;
     }
 
     @Override
     public User updateUser(User user) {
         if (!users.containsKey(user.getId())) {
-            throw new NotFoundException(String.format("Пользователя с id: %s не существует.", user.getId()));
+            throw new NotFoundException("Пользователь не найден: " + user.getId());
         }
         users.put(user.getId(), user);
-        log.debug("Update user {}", user);
+        log.debug("Обновлен пользователь: {}", user);
         return user;
     }
 
     @Override
     public void addFriend(Long id, Long friendId) {
-        if (users.get(id) == null || users.get(friendId) == null || id.equals(friendId)) {
-            throw new NotFoundException("Недопустимые пользователи для дружбы");
-        }
-        userFriends.computeIfAbsent(users.get(id), k -> new HashSet<>()).add(users.get(friendId));
-        userFriends.computeIfAbsent(users.get(friendId), k -> new HashSet<>()).add(users.get(id));
-        log.debug("Add friendship {} {}", users.get(id), users.get(friendId));
+        User user = users.get(id);
+        User friend = users.get(friendId);
+        user.getFriends().add(friendId);
+        friend.getFriends().add(id);
+        log.debug("Добавлена дружба между {} и {}", id, friendId);
     }
 
     @Override
     public void removeFriend(Long id, Long friendId) {
-        if (users.get(id) == null || users.get(friendId) == null) {
-            throw new NotFoundException("Пользователи не могут быть null");
-        }
-        if (userFriends.containsKey(users.get(id))) {
-            userFriends.get(users.get(id)).remove(users.get(friendId));
-        }
-        if (userFriends.containsKey(users.get(friendId))) {
-            userFriends.get(users.get(friendId)).remove(users.get(id));
-        }
-        log.debug("Remove friendship {} {}", users.get(id), users.get(friendId));
+        User user = users.get(id);
+        User friend = users.get(friendId);
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(id);
+        log.debug("Удалена дружба между {} и {}", id, friendId);
     }
 
     @Override
     public Collection<User> getFriends(Long id) {
-        if (users.get(id) == null) {
-            throw new NotFoundException("Пользователь не может быть null");
-        }
-        return userFriends.getOrDefault(users.get(id), Collections.emptySet());
+        return users.get(id).getFriends().stream()
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<User> getCommonFriends(Long id, Long friendId) {
-        if (users.get(id) == null || users.get(friendId) == null) {
-            throw new NotFoundException("Пользователи не могут быть null");
-        }
+        Set<Long> commonIds = new HashSet<>(users.get(id).getFriends());
+        commonIds.retainAll(users.get(friendId).getFriends());
 
-        Set<User> friends1 = userFriends.getOrDefault(users.get(id), Collections.emptySet());
-        Set<User> friends2 = userFriends.getOrDefault(users.get(friendId), Collections.emptySet());
-
-        Set<User> mutualFriends = new HashSet<>(friends1);
-        mutualFriends.retainAll(friends2);
-
-        return mutualFriends;
+        return commonIds.stream()
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
     public boolean existsById(Long id) {
         return users.containsKey(id);
-    }
-
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
     }
 }
