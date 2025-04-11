@@ -9,6 +9,8 @@ import ru.yandex.practicum.filmorate.annotation.MinimumDate;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class Film {
@@ -24,4 +26,5 @@ public class Film {
     @JsonFormat(shape = JsonFormat.Shape.NUMBER_INT)
     @NotNull(message = "Не может быть пустым")
     Duration duration;
+    private Set<Long> likes = new HashSet<>();
 }

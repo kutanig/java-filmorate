@@ -1,58 +1,54 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
-@Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/films")
 public class FilmController {
 
-    private final Map<Long, Film> films = new HashMap<>();
+    private final FilmService filmService;
 
     @GetMapping
     public Collection<Film> filmsAll() {
-        return new ArrayList<>(films.values());
+        return filmService.getAllFilms();
+    }
+
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable Long id) {
+        return filmService.getFilmById(id);
     }
 
     @PostMapping
     public Film addFilm(@RequestBody @Valid Film newFilm) {
-        if (newFilm.getDuration().isNegative() || newFilm.getDuration().isZero()) {
-            throw new ValidationException("Продолжительность фильма должна быть положительным числом");
-        }
-        newFilm.setId(getNextId());
-        films.put(newFilm.getId(), newFilm);
-        log.info("Add film{}", newFilm);
-        return newFilm;
+        return filmService.createFilm(newFilm);
     }
 
     @PutMapping
     public Film updateFilm(@RequestBody @Valid Film film) {
-        if (!films.containsKey(film.getId())) {
-            throw new ValidationException(String.format("Фильма с id: %s не существует.", film.getId()));
-        }
-        if (film.getDuration().isNegative() || film.getDuration().isZero()) {
-            throw new ValidationException("Продолжительность фильма должна быть положительным числом");
-        }
-        films.put(film.getId(), film);
-        log.info("Update film{}", film);
-        return film;
+        return filmService.updateFilm(film);
     }
 
-    private long getNextId() {
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.removeLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getPopularFilms(
+            @RequestParam(defaultValue = "10") int count) {
+        return filmService.getPopularFilms(count);
     }
 }
