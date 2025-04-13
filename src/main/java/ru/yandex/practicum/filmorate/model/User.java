@@ -22,5 +22,5 @@ public class User {
     @Past(message = "Некорректная дата рождения")
     LocalDate birthday;
     @JsonIgnore
-    Set<Long> friends = new HashSet<>();
+    Set<Friendship> friends = new HashSet<>();
 }
