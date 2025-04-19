@@ -10,8 +10,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Data
 public class FilmDto {
@@ -25,8 +24,9 @@ public class FilmDto {
     private LocalDate releaseDate;
     @Positive(message = "Длительность должна быть положительной")
     private int duration;
-    @NotNull(message = "MPA не может быть пустым")
     private Mpa mpa;
-    private Set<Genre> genres = new HashSet<>();
+    private List<Genre> genres;
+    private Long rate;
+    private Long mpaId;
 }
 

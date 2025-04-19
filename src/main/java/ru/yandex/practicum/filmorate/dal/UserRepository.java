@@ -21,7 +21,7 @@ public class UserRepository extends BaseRepository<User> {
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM \"USER\" WHERE ID = ?";
 
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
-        super(jdbc, mapper, User.class);
+        super(jdbc, mapper);
     }
 
     public List<User> findAll() {
@@ -48,7 +48,6 @@ public class UserRepository extends BaseRepository<User> {
                 user.getEmail(),
                 user.getBirthday()
         );
-
         user.setId(id);
         return user;
     }

@@ -19,7 +19,7 @@ public class FriendshipRepository extends BaseRepository<Friendship> {
     private static final String DELETE_FRIENDSHIP_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
 
     public FriendshipRepository(JdbcTemplate jdbc, RowMapper<Friendship> mapper) {
-        super(jdbc, mapper, Friendship.class);
+        super(jdbc, mapper);
     }
 
 

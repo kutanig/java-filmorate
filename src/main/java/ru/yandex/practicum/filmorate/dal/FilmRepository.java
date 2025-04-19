@@ -23,7 +23,7 @@ public class FilmRepository extends BaseRepository<Film> {
     private static final String DELETE_FILM_GENRES = "DELETE FROM FILM_GENRE WHERE FILM_ID = ?";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
-        super(jdbc, mapper, Film.class);
+        super(jdbc, mapper);
     }
 
     public List<Film> findAll() {
@@ -57,11 +57,12 @@ public class FilmRepository extends BaseRepository<Film> {
 
         long id = insert(
                 INSERT_QUERY,
+                film.getRate(),
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
-                film.getMpa().getId()
+                film.getMpaId()
         );
         film.setId(id);
         if (film.getGenres() != null) {
@@ -76,6 +77,7 @@ public class FilmRepository extends BaseRepository<Film> {
     public Film update(Film film) {
         update(
                 UPDATE_QUERY,
+                film.getRate(),
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),

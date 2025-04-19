@@ -14,12 +14,11 @@ public class FilmLikeRepository extends BaseRepository<FilmLike> {
     private static final String DELETE_FILM_LIKE = "DELETE FROM FILM_LIKE WHERE FILM_ID = ? AND USER_ID = ?";
 
     public FilmLikeRepository(JdbcTemplate jdbc, RowMapper<FilmLike> mapper) {
-        super(jdbc, mapper, FilmLike.class);
+        super(jdbc, mapper);
     }
 
-
     public void add(Long filmId, Long userId) {
-        insertWithPrimaryKey(
+        Long generatedId = insert(
                 INSERT_QUERY,
                 filmId,
                 userId,

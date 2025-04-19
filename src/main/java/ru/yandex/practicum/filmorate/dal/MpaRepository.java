@@ -14,7 +14,7 @@ public class MpaRepository extends BaseRepository<Mpa> {
     private static final String FIND_ALL_QUERY = "SELECT * FROM MPA";
 
     public MpaRepository(JdbcTemplate jdbc, RowMapper<Mpa> mapper) {
-        super(jdbc, mapper, Mpa.class);
+        super(jdbc, mapper);
     }
 
     public Optional<Mpa> findById(long mpaId) {

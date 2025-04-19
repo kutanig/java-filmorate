@@ -17,7 +17,6 @@ import java.util.Optional;
 public abstract class BaseRepository<T> {
     protected final JdbcTemplate jdbc;
     protected final RowMapper<T> mapper;
-    private final Class<T> entityType;
 
     protected Optional<T> findOne(String query, Object... params) {
         try {
@@ -29,7 +28,7 @@ public abstract class BaseRepository<T> {
     }
 
     protected List<T> findMany(String query, Object... params) {
-        return jdbc.queryForList(query, entityType, params);
+        return jdbc.query(query, mapper, params);
     }
 
     public boolean delete(String query, long id) {
@@ -37,7 +36,7 @@ public abstract class BaseRepository<T> {
         return rowsDeleted > 0;
     }
 
-    protected Integer insert(String query, Object... params) throws RepositoryException {
+    protected Long insert(String query, Object... params) throws RepositoryException {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement ps = connection
@@ -48,9 +47,9 @@ public abstract class BaseRepository<T> {
             return ps;
         }, keyHolder);
 
-        Integer id = keyHolder.getKeyAs(Integer.class);
-        if (id != null) {
-            return id;
+        Number key = keyHolder.getKey();
+        if (key != null) {
+            return key.longValue();
         } else {
             throw new RepositoryException("Не удалось сохранить данные");
         }

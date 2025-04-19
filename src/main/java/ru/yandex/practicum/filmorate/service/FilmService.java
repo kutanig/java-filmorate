@@ -48,7 +48,7 @@ public class FilmService {
     }
 
     public FilmDto addFilm(FilmDto film) {
-        validateFilmsData(film);
+        //validateFilmsData(film);
         return FilmMapper.toDto(filmStorage.add(FilmMapper.toFilm(film)));
     }
 
@@ -57,7 +57,7 @@ public class FilmService {
         if (oldFilm.isEmpty()) {
             throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
         }
-        validateFilmsData(newFilm);
+        //validateFilmsData(newFilm);
         return FilmMapper.toDto(filmStorage.update(FilmMapper.toFilm(newFilm)));
     }
 

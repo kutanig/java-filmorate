@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -61,8 +62,12 @@ public class InMemoryUserStorage implements UserStorage {
 
     }
 
-    public Collection<User> getFriends(Long userId) {
-        return friendshipRepository.getFriends(userId);
+    @Override
+    public List<User> getFriends(Long userId) {
+        return friendshipRepository.getFriends(userId)
+                .stream()
+                .sorted(Comparator.comparingLong(User::getId))
+                .collect(Collectors.toList());
     }
 
     public boolean deleteFriend(Long userId, Long friendId) {

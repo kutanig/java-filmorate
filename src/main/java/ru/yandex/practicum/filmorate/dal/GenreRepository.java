@@ -18,7 +18,7 @@ public class GenreRepository extends BaseRepository<Genre> {
             "WHERE FG.FILM_ID = ?";
 
     public GenreRepository(JdbcTemplate jdbc, RowMapper<Genre> mapper) {
-        super(jdbc, mapper, Genre.class);
+        super(jdbc, mapper );
     }
 
     public Optional<Genre> findById(long genreId) {
@@ -29,7 +29,7 @@ public class GenreRepository extends BaseRepository<Genre> {
         return jdbc.query(FIND_ALL_QUERY, mapper);
     }
 
-    public List<Genre> findGenresOfFilm(long filmId) {
+    public  List<Genre> findGenresOfFilm(long filmId) {
         return jdbc.query(FIND_GENRES_OF_FILM, mapper, filmId);
     }
 }
