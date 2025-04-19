@@ -1,51 +1,74 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.dal.FilmLikeRepository;
+import ru.yandex.practicum.filmorate.dal.FilmRepository;
+import ru.yandex.practicum.filmorate.dal.GenreRepository;
+import ru.yandex.practicum.filmorate.dal.MpaRepository;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.*;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class InMemoryFilmStorage implements FilmStorage {
 
-    private final Map<Long, Film> films = new HashMap<>();
+    private final FilmRepository filmRepository;
+    private final GenreRepository genreRepository;
+    private final MpaRepository mpaRepository;
+    private final FilmLikeRepository filmLikeRepository;
 
-    public Collection<Film> getAllFilms() {
-        return new ArrayList<>(films.values());
+    public List<Film> getFilms() {
+        return filmRepository.findAll();
     }
 
-    @Override
-    public Film createFilm(Film film) {
-        film.setId(getNextId());
-        films.put(film.getId(), film);
-        log.debug("Add film {}", film);
-        return film;
+    public Optional<Film> getFilmById(long filmId) {
+        return filmRepository.findById(filmId);
     }
 
-    @Override
-    public Film updateFilm(Film film) {
-        if (!films.containsKey(film.getId())) {
-            throw new NotFoundException(String.format("Фильма с id: %s не существует.", film.getId()));
-        }
-        films.put(film.getId(), film);
-        log.debug("Update film {}", film);
-        return film;
+    public Film add(Film film) {
+        return filmRepository.add(film);
     }
 
-    @Override
-    public Optional<Film> getFilmById(Long id) {
-        return Optional.ofNullable(films.get(id));
+    public Film update(Film film) {
+        return filmRepository.update(film);
     }
 
-    private long getNextId() {
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    public boolean delete(Long filmId) {
+        return filmRepository.delete(filmId);
+    }
+
+    public List<Genre> getGenres() {
+        return genreRepository.findAll();
+    }
+
+    public Optional<Genre> getGenreById(long genreId) {
+        return genreRepository.findById(genreId);
+    }
+
+    public Optional<Mpa> getMPAById(long mpaId) {
+        return mpaRepository.findById(mpaId);
+    }
+
+    public List<Mpa> getMPAs() {
+        return mpaRepository.findAll();
+    }
+
+    public Integer getLikesCount(Film film) {
+        return filmRepository.getLikesCount(film);
+    }
+
+    public void addLike(Long filmId, Long userId) {
+
+        filmLikeRepository.add(filmId, userId);
+    }
+
+    public void deleteLike(Long filmId, Long userId) {
+        filmLikeRepository.delete(filmId, userId);
     }
 }

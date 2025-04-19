@@ -4,11 +4,11 @@ import lombok.Data;
 
 @Data
 public class Friendship {
-    private Long friendId; // ID друга
-    private FriendshipStatus status; // Статус дружбы
+    private Long userId;
+    private Long friendId;
+    private boolean status;
 
-    public enum FriendshipStatus {
-        PENDING,
-        CONFIRMED
+    public Object getStatus() {
+        return status;
     }
 }

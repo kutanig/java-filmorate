@@ -6,19 +6,17 @@ import java.util.Collection;
 
 public interface UserStorage {
 
-    Collection<User> getAllUsers();
+    Collection<User> getUsers();
 
-    User createUser(User user);
+    Collection<User> getFriends(Long userId);
 
-    User updateUser(User user);
+    void addFriend(Long userId, Long friendId);
 
-    void addFriend(Long id, Long friendId);
+    boolean deleteFriend(Long userId, Long friendId);
 
-    void removeFriend(Long id, Long friendId);
+    User add(User user);
 
-    Collection<User> getFriends(Long id);
+    User update(User newUser);
 
-    Collection<User> getCommonFriends(Long id, Long friendId);
-
-    boolean existsById(Long id);
+    boolean delete(Long userId);
 }

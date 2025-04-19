@@ -1,85 +1,71 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.dal.FriendshipRepository;
+import ru.yandex.practicum.filmorate.dal.UserRepository;
+import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class InMemoryUserStorage implements UserStorage {
 
-    private final Map<Long, User> users = new HashMap<>();
-    private long nextId = 1;
+    private final UserRepository userRepository;
+    private final FriendshipRepository friendshipRepository;
 
-    @Override
-    public Collection<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+    public List<User> getUsers() {
+        return userRepository.findAll();
     }
 
-    @Override
-    public User createUser(User user) {
+    public Optional<User> getUserById(long userId) {
+        return userRepository.findById(userId);
+    }
+
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    public Optional<Friendship> findByFriendshipId(long userId, long friendId) {
+        return friendshipRepository.findByFriendshipId(userId, friendId);
+    }
+
+    public User add(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-        user.setId(nextId++);
-        users.put(user.getId(), user);
-        log.debug("Добавлен пользователь: {}", user);
-        return user;
+        return userRepository.add(user);
     }
 
-    @Override
-    public User updateUser(User user) {
-        if (!users.containsKey(user.getId())) {
-            throw new NotFoundException("Пользователь не найден: " + user.getId());
+    public User update(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
         }
-        users.put(user.getId(), user);
-        log.debug("Обновлен пользователь: {}", user);
-        return user;
+        return userRepository.update(user);
     }
 
-    @Override
-    public void addFriend(Long id, Long friendId) {
-        User user = users.get(id);
-        User friend = users.get(friendId);
-        user.getFriends().add(friendId);
-        friend.getFriends().add(id);
-        log.debug("Добавлена дружба между {} и {}", id, friendId);
+    public boolean delete(Long userId) {
+        return userRepository.delete(userId);
     }
 
-    @Override
-    public void removeFriend(Long id, Long friendId) {
-        User user = users.get(id);
-        User friend = users.get(friendId);
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(id);
-        log.debug("Удалена дружба между {} и {}", id, friendId);
+    public void addFriend(Long userId, Long friendId) {
+        Friendship friendship = new Friendship();
+        friendship.setUserId(userId);
+        friendship.setFriendId(friendId);
+        friendship.setStatus(true);
+        friendshipRepository.addFriend(friendship);
+
     }
 
-    @Override
-    public Collection<User> getFriends(Long id) {
-        return users.get(id).getFriends().stream()
-                .map(users::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+    public Collection<User> getFriends(Long userId) {
+        return friendshipRepository.getFriends(userId);
     }
 
-    @Override
-    public Collection<User> getCommonFriends(Long id, Long friendId) {
-        Set<Long> commonIds = new HashSet<>(users.get(id).getFriends());
-        commonIds.retainAll(users.get(friendId).getFriends());
-
-        return commonIds.stream()
-                .map(users::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public boolean existsById(Long id) {
-        return users.containsKey(id);
+    public boolean deleteFriend(Long userId, Long friendId) {
+        return friendshipRepository.deleteFriend(userId, friendId);
     }
 }
