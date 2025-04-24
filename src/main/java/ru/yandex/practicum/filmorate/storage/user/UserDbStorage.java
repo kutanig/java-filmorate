@@ -2,7 +2,8 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.FriendshipRepository;
 import ru.yandex.practicum.filmorate.dal.UserRepository;
 import ru.yandex.practicum.filmorate.model.Friendship;
@@ -12,9 +13,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Component
+@Qualifier
+@Repository
 @RequiredArgsConstructor
-public class InMemoryUserStorage implements UserStorage {
+public class UserDbStorage implements UserStorage {
 
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;

@@ -2,7 +2,8 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.FilmLikeRepository;
 import ru.yandex.practicum.filmorate.dal.FilmRepository;
 import ru.yandex.practicum.filmorate.dal.GenreRepository;
@@ -14,9 +15,10 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import java.util.*;
 
 @Slf4j
-@Component
+@Qualifier
+@Repository
 @RequiredArgsConstructor
-public class InMemoryFilmStorage implements FilmStorage {
+public class FilmDbStorage implements FilmStorage {
 
     private final FilmRepository filmRepository;
     private final GenreRepository genreRepository;
@@ -71,4 +73,5 @@ public class InMemoryFilmStorage implements FilmStorage {
     public void deleteLike(Long filmId, Long userId) {
         filmLikeRepository.delete(filmId, userId);
     }
+
 }

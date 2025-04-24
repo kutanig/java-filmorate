@@ -24,4 +24,10 @@ public class MpaRepository extends BaseRepository<Mpa> {
     public List<Mpa> findAll() {
         return jdbc.query(FIND_ALL_QUERY, mapper);
     }
+
+    public boolean existsById(Long id) {
+        String sql = "SELECT COUNT(*) FROM MPA WHERE ID = ?";
+        Integer count = jdbc.queryForObject(sql, Integer.class, id);
+        return count != null && count > 0;
+    }
 }

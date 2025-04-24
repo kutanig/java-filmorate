@@ -25,7 +25,7 @@ public class MpaController {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Mpa getMpa(
-            @PathVariable @Min(1) Long mpaId
+            @PathVariable("id") @Min(1) Long mpaId
     ) {
         return mpaService.getMpa(mpaId);
     }

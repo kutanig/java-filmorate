@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.annotation.MinimumDate;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,8 +25,7 @@ public class FilmDto {
     @Positive(message = "Длительность должна быть положительной")
     @NotNull(message = "Длительность не может быть пустой")
     private Integer duration;
-    @NotNull(message = "MPA не может быть пустым")
-    private Long mpaId;
-    private List<Long> genreIds;
+    private Mpa mpa;
+    private List<Genre> genres;
 }
 

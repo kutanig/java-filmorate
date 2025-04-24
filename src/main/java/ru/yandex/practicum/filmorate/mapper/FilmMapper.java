@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.mapper;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -13,23 +14,25 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public class filmMapper {
-    private MpaService mpaService;
-    private GenreService genreService;
-
-    public filmMapper(MpaService mpaService, GenreService genreService) {
-        this.mpaService = mpaService;
-        this.genreService = genreService;
-    }
+@RequiredArgsConstructor
+public class FilmMapper {
+    private final MpaService mpaService;
+    private final GenreService genreService;
 
     public Film toFilm(FilmDto dto) {
-        Mpa mpa = mpaService.getMpa(dto.getMpaId());
+
+        Mpa mpa = null;
+        if (dto.getMpa() != null) {
+            mpa = mpaService.getMpa(dto.getMpa().getId());
+        }
+
         List<Genre> genres = Collections.emptyList();
-        if (dto.getGenreIds() != null && !dto.getGenreIds().isEmpty()) {
-            genres = dto.getGenreIds().stream()
-                    .map(genreService::getGenre)
+        if (dto.getGenres() != null && !dto.getGenres().isEmpty()) {
+            genres = dto.getGenres().stream()
+                    .map(genre -> genreService.getGenre(genre.getId()))
                     .collect(Collectors.toList());
         }
+
         return Film.builder()
                 .id(dto.getId())
                 .name(dto.getName())
@@ -48,20 +51,10 @@ public class filmMapper {
         dto.setDescription(film.getDescription());
         dto.setReleaseDate(film.getReleaseDate());
         dto.setDuration(film.getDuration());
-        Mpa mpa = film.getMpa();
-        if (mpa == null) {
-            throw new IllegalStateException("Фильм должен иметь MPA");
-        }
-        dto.setMpaId(mpa.getId());
+        dto.setMpa(film.getMpa());
         List<Genre> genres = film.getGenres();
-        if (genres != null && !genres.isEmpty()) {
-            List<Long> genreIds = genres.stream()
-                    .map(Genre::getId)
-                    .collect(Collectors.toList());
-            dto.setGenreIds(genreIds);
-        } else {
-            dto.setGenreIds(Collections.emptyList());
-        }
+        dto.setGenres(genres != null ? genres : Collections.emptyList());
+
         return dto;
     }
 }

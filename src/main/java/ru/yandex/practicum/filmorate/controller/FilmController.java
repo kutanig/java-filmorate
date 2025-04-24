@@ -52,7 +52,7 @@ public class FilmController {
         filmService.deleteFilm(filmId);
     }
 
-    @PutMapping("/{filmId}/likes/{userId}")
+    @PutMapping("/{filmId}/like/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void addLike(
             @PathVariable @Positive(message = "ID фильма должен быть положительным числом") Long filmId,
@@ -61,7 +61,7 @@ public class FilmController {
         filmService.addLike(filmId, userId);
     }
 
-    @DeleteMapping("/{filmId}/likes/{userId}")
+    @DeleteMapping("/{filmId}/like/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeLike(
             @PathVariable @Positive(message = "ID фильма должен быть положительным числом") Long filmId,
@@ -70,7 +70,7 @@ public class FilmController {
         filmService.removeLike(filmId, userId);
     }
 
-    /*@GetMapping("/popular")
+    @GetMapping("/popular")
     @ResponseStatus(HttpStatus.OK)
     public Collection<FilmDto> getPopularFilms(
             @RequestParam(defaultValue = "10") @Min(1) Integer count,
@@ -78,5 +78,5 @@ public class FilmController {
             @RequestParam(defaultValue = "desc") String sort
     ) {
         return filmService.findMostPopular(count, from, sort);
-    }*/
+    }
 }
