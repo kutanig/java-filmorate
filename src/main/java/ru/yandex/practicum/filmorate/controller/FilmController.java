@@ -67,10 +67,10 @@ public class FilmController {
             @PathVariable @Positive(message = "ID фильма должен быть положительным числом") Long filmId,
             @PathVariable @Positive(message = "ID пользователя должен быть положительным числом") Long userId
     ) {
-        filmService.deleteLike(filmId, userId);
+        filmService.removeLike(filmId, userId);
     }
 
-    @GetMapping("/popular")
+    /*@GetMapping("/popular")
     @ResponseStatus(HttpStatus.OK)
     public Collection<FilmDto> getPopularFilms(
             @RequestParam(defaultValue = "10") @Min(1) Integer count,
@@ -78,5 +78,5 @@ public class FilmController {
             @RequestParam(defaultValue = "desc") String sort
     ) {
         return filmService.findMostPopular(count, from, sort);
-    }
+    }*/
 }

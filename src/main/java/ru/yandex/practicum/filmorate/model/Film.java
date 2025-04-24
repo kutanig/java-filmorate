@@ -20,6 +20,4 @@ public class Film {
     private int duration;
     private Mpa mpa;
     private List<Genre> genres;
-    private Long rate;
-    private Long mpaId;
 }

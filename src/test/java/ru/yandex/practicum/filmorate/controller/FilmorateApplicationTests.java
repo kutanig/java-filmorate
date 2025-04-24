@@ -159,7 +159,7 @@ class FilmorateApplicationTests {
     @Test
     void shouldHandleFilmWithGenres() {
         Film film = filmStorage.add(testFilm);
-        film.setGenres(Set.of(new Genre(1L,"Комедия"), new Genre(2L,"Драма")));
+        film.setGenres(List.of(new Genre(1L,"Комедия"), new Genre(2L,"Драма")));
         filmStorage.update(film);
 
         Film updatedFilm = filmStorage.getFilmById(film.getId()).orElseThrow();

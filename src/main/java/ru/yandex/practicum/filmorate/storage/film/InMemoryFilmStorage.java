@@ -60,7 +60,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     public Integer getLikesCount(Film film) {
-        return filmRepository.getLikesCount(film);
+        return filmRepository.getLikesCount(film.getId());
     }
 
     public void addLike(Long filmId, Long userId) {

@@ -2,101 +2,124 @@ package ru.yandex.practicum.filmorate.dal;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class FilmRepository extends BaseRepository<Film> {
 
-    private static final String FIND_ALL_QUERY = "SELECT * FROM FILM  ";
+    private static final String FIND_ALL_QUERY =
+            "SELECT f.*, m.NAME AS MPA_NAME, m.DESCRIPTION AS MPA_DESCRIPTION " +
+                    "FROM FILM f " +
+                    "JOIN MPA m ON f.MPA_ID = m.ID";
+
+    private static final String FIND_BY_ID_QUERY =
+            FIND_ALL_QUERY + " WHERE f.ID = ?";
+
     private static final String GET_LIKES_COUNT = "SELECT COUNT(*) FROM FILM_LIKE WHERE FILM_ID = ?";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM FILM WHERE ID = ?";
-    private static final String INSERT_QUERY = "INSERT INTO FILM(RATE, NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) VALUES (?, ?, ?, ?, ?, ?)";
-    private static final String INSERT_FILM_GENRE = "INSERT INTO FILM_GENRE(FILM_ID, GENRE_ID) VALUES (?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE FILM SET RATE = ?, NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, DURATION = ?, MPA_ID = ? WHERE ID = ?";
+    private static final String INSERT_QUERY = "INSERT INTO FILM (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) VALUES (?, ?, ?, ?, ?)";
+    private static final String INSERT_FILM_GENRE = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)";
+    private static final String UPDATE_QUERY = "UPDATE FILM SET NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, DURATION = ?, MPA_ID = ? WHERE ID = ?";
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM FILM WHERE ID = ?";
     private static final String DELETE_FILM_GENRES = "DELETE FROM FILM_GENRE WHERE FILM_ID = ?";
 
-    public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
-        super(jdbc, mapper);
+    private final JdbcTemplate jdbc;
+    private final RowMapper<Film> filmMapper;
+    private final GenreRepository genreRepository;
+
+    public FilmRepository(
+            JdbcTemplate jdbc,
+            RowMapper<Film> filmMapper,
+            GenreRepository genreRepository
+    ) {
+        super(jdbc, filmMapper);
+        this.jdbc = jdbc;
+        this.filmMapper = filmMapper;
+        this.genreRepository = genreRepository;
     }
 
     public List<Film> findAll() {
-        return jdbc.query(FIND_ALL_QUERY, mapper);
+        List<Film> films = jdbc.query(FIND_ALL_QUERY, filmMapper);
+        films.forEach(this::loadGenres);
+        return films;
     }
 
+    public Optional<Film> findById(Long filmId) {
+        List<Film> films = jdbc.query(FIND_BY_ID_QUERY, filmMapper, filmId);
+        if (films.isEmpty()) return Optional.empty();
 
-    public Integer getLikesCount(Film film) {
-        return jdbc.queryForObject(GET_LIKES_COUNT, Integer.class, film.getId());
+        Film film = films.get(0);
+        loadGenres(film);
+        return Optional.of(film);
     }
 
-    public Optional<Film> findById(long filmId) {
-        return findOne(FIND_BY_ID_QUERY, filmId);
+    //загрузка жанров
+    private void loadGenres(Film film) {
+        List<Genre> genres = genreRepository.findByFilmId(film.getId());
+        film.setGenres(genres);
     }
 
-    public boolean delete(long filmId) {
-        return delete(DELETE_BY_ID_QUERY, filmId);
-    }
-
-    public void batchGenres(List<Genre> genres, Long filmId) {
-        jdbc.batchUpdate(INSERT_FILM_GENRE,
-                genres,
-                100,
-                (PreparedStatement ps, Genre genre) -> {
-                    ps.setLong(1, filmId);
-                    ps.setLong(2, genre.getId());
-                });
+    public Integer getLikesCount(Long filmId) {
+        return jdbc.queryForObject(GET_LIKES_COUNT, Integer.class, filmId);
     }
 
     public Film add(Film film) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbc.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(INSERT_QUERY, new String[]{"ID"});
+            ps.setString(1, film.getName());
+            ps.setString(2, film.getDescription());
+            ps.setDate(3, Date.valueOf(film.getReleaseDate()));
+            ps.setInt(4, film.getDuration());
+            ps.setLong(5, film.getMpa().getId());
+            return ps;
+        }, keyHolder);
 
-        long id = insert(
-                INSERT_QUERY,
-                film.getRate(),
-                film.getName(),
-                film.getDescription(),
-                film.getReleaseDate(),
-                film.getDuration(),
-                film.getMpaId()
-        );
-        film.setId(id);
-        if (film.getGenres() != null) {
-            List<Genre> result = film.getGenres().stream()
-                    .distinct().toList();
-            batchGenres(result, film.getId());
-        }
+        film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+        updateGenres(film);
         return film;
     }
 
-
     public Film update(Film film) {
-        update(
-                UPDATE_QUERY,
-                film.getRate(),
+        jdbc.update(UPDATE_QUERY,
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
                 film.getMpa().getId(),
-                film.getId()
-        );
-        deleteFilmGenres(film.getId());
-        if (film.getGenres() != null) {
-            List<Genre> result = film.getGenres().stream()
-                    .distinct().toList();
-            batchGenres(result, film.getId());
-        }
+                film.getId());
+
+        jdbc.update(DELETE_FILM_GENRES, film.getId());
+        updateGenres(film);
         return film;
     }
 
-    public boolean deleteFilmGenres(Long filmId) {
-        int rowsDeleted = jdbc.update(DELETE_FILM_GENRES, filmId);
-        return rowsDeleted > 0;
+    private void updateGenres(Film film) {
+        if (film.getGenres() != null) {
+            List<Genre> uniqueGenres = film.getGenres().stream()
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            jdbc.batchUpdate(INSERT_FILM_GENRE, uniqueGenres, uniqueGenres.size(),
+                    (PreparedStatement ps, Genre genre) -> {
+                        ps.setLong(1, film.getId());
+                        ps.setLong(2, genre.getId());
+                    });
+        }
+    }
+
+    public boolean delete(Long filmId) {
+        return jdbc.update(DELETE_BY_ID_QUERY, filmId) > 0;
     }
 }
 
