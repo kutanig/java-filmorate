@@ -59,7 +59,7 @@ public class FilmService {
         filmStorage.getFilmById(filmDto.getId())
                 .orElseThrow(() -> new NotFoundException("Фильм не найден"));
         validateFilmData(filmDto);
-        return filmMapper.toDto(filmStorage.add(filmMapper.toFilm(filmDto)));
+        return filmMapper.toDto(filmStorage.update(filmMapper.toFilm(filmDto)));
     }
 
     public void deleteFilm(Long filmId) {
