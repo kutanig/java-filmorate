@@ -14,9 +14,9 @@ public class GenreRepository extends BaseRepository<Genre> {
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM GENRE WHERE ID = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM GENRE ORDER BY ID";
     private static final String FIND_GENRES_OF_FILM = """
-            SELECT g.ID, g.NAME 
-            FROM GENRE g 
-            JOIN FILM_GENRE fg ON g.ID = fg.GENRE_ID 
+            SELECT g.ID, g.NAME
+            FROM GENRE g
+            JOIN FILM_GENRE fg ON g.ID = fg.GENRE_ID
             WHERE fg.FILM_ID = ?
             """;
 
@@ -45,11 +45,5 @@ public class GenreRepository extends BaseRepository<Genre> {
 
     public List<Genre> findByFilmId(long filmId) {
         return jdbc.query(FIND_GENRES_OF_FILM, mapper, filmId);
-    }
-
-    public boolean existsById(long genreId) {
-        String sql = "SELECT COUNT(*) FROM GENRE WHERE ID = ?";
-        Integer count = jdbc.queryForObject(sql, Integer.class, genreId);
-        return count != null && count > 0;
     }
 }
