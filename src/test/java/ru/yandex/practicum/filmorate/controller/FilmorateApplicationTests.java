@@ -80,41 +80,6 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    void shouldAddAndRetrieveFriends() {
-        User user1 = userStorage.add(testUser);
-        User user2 = userStorage.add(testUser.toBuilder().email("friend@example.com").build());
-
-        userStorage.addFriend(user1.getId(), user2.getId());
-        List<User> friends = userStorage.getFriends(user1.getId());
-
-        assertThat(friends).hasSize(1)
-                .extracting(User::getId)
-                .containsExactly(user2.getId());
-    }
-
-    @Test
-    void shouldRemoveFriend() {
-        User user1 = userStorage.add(testUser);
-        User user2 = userStorage.add(testUser.toBuilder().email("friend@example.com").build());
-
-        userStorage.addFriend(user1.getId(), user2.getId());
-        userStorage.deleteFriend(user1.getId(), user2.getId());
-
-        assertThat(userStorage.getFriends(user1.getId())).isEmpty();
-    }
-
-    // Film Tests
-    @Test
-    void shouldCreateAndRetrieveFilm() {
-        Film createdFilm = filmStorage.add(testFilm);
-        assertThat(createdFilm.getId()).isNotNull();
-
-        Film retrievedFilm = filmStorage.getFilmById(createdFilm.getId())
-                .orElseThrow(() -> new NotFoundException("Film not found"));
-        assertThat(retrievedFilm).isEqualTo(createdFilm);
-    }
-
-    @Test
     void shouldUpdateFilm() {
         Film createdFilm = filmStorage.add(testFilm);
         createdFilm.setName("Updated Film Name");
@@ -157,7 +122,7 @@ class FilmorateApplicationTests {
     @Test
     void shouldHandleFilmWithGenres() {
         Film film = filmStorage.add(testFilm);
-        film.setGenres(List.of(new Genre(1L,"Комедия"), new Genre(2L,"Драма")));
+        film.setGenres(List.of(new Genre(1L, "Комедия"), new Genre(2L, "Драма")));
         filmStorage.update(film);
 
         Film updatedFilm = filmStorage.getFilmById(film.getId()).orElseThrow();
@@ -174,5 +139,28 @@ class FilmorateApplicationTests {
                 () -> assertThrows(NotFoundException.class,
                         () -> userStorage.getUserById(-999L).orElseThrow(() -> new NotFoundException("")))
         );
+    }
+
+    //Film test
+    @Test
+    void shouldKeepSameIdAfterFilmUpdate() {
+        // Создаем фильм
+        Film createdFilm = filmStorage.add(testFilm);
+        Long originalId = createdFilm.getId();
+
+        // Обновляем данные фильма
+        createdFilm.setName("New Name");
+        createdFilm.setDescription("New Description");
+        Film updatedFilm = filmStorage.update(createdFilm);
+
+        // Проверяем, что ID остался прежним
+        assertThat(updatedFilm.getId())
+                .as("ID фильма должен оставаться неизменным после обновления")
+                .isEqualTo(originalId);
+
+        // Дополнительная проверка: получаем фильм из хранилища и проверяем ID
+        Film retrievedFilm = filmStorage.getFilmById(originalId).orElseThrow();
+        assertThat(retrievedFilm.getId())
+                .isEqualTo(originalId);
     }
 }

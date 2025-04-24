@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
@@ -29,7 +30,7 @@ public class FilmRepository extends BaseRepository<Film> {
     private static final String GET_LIKES_COUNT = "SELECT COUNT(*) FROM FILM_LIKE WHERE FILM_ID = ?";
     private static final String INSERT_QUERY = "INSERT INTO FILM (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) VALUES (?, ?, ?, ?, ?)";
     private static final String INSERT_FILM_GENRE = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE FILM SET NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, DURATION = ?, MPA_ID = ? WHERE ID = ?";
+    private static final String UPDATE_QUERY = "UPDATE FILM SET NAME=?, DESCRIPTION=?, RELEASE_DATE=?, DURATION=?, MPA_ID=? WHERE ID=?";
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM FILM WHERE ID = ?";
     private static final String DELETE_FILM_GENRES = "DELETE FROM FILM_GENRE WHERE FILM_ID = ?";
 
@@ -58,7 +59,7 @@ public class FilmRepository extends BaseRepository<Film> {
         List<Film> films = jdbc.query(FIND_BY_ID_QUERY, filmMapper, filmId);
         if (films.isEmpty()) return Optional.empty();
 
-        Film film = films.get(0);
+        Film film = films.getFirst();
         loadGenres(film);
         return Optional.of(film);
     }
@@ -91,7 +92,7 @@ public class FilmRepository extends BaseRepository<Film> {
     }
 
     public Film update(Film film) {
-        jdbc.update(UPDATE_QUERY,
+        int rowsUpdated = jdbc.update(UPDATE_QUERY,
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
@@ -99,9 +100,14 @@ public class FilmRepository extends BaseRepository<Film> {
                 film.getMpa().getId(),
                 film.getId());
 
+        if (rowsUpdated == 0) {
+            throw new EntityNotFoundException("Фильм с id=" + film.getId() + "не найден");
+        }
         jdbc.update(DELETE_FILM_GENRES, film.getId());
         updateGenres(film);
-        return film;
+
+        return findById(film.getId())
+                .orElseThrow(() -> new RuntimeException("Фильм не найден после обновления"));
     }
 
     private void updateGenres(Film film) {
