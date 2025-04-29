@@ -5,7 +5,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ConflictException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
@@ -116,7 +116,7 @@ public class FilmRepository extends BaseRepository<Film> {
                 film.getId());
 
         if (rowsUpdated == 0) {
-            throw new EntityNotFoundException("Фильм с id=" + film.getId() + "не найден");
+            throw new ConflictException("Фильм с id=" + film.getId() + "не найден");
         }
         jdbc.update(DELETE_FILM_GENRES, film.getId());
         updateGenres(film);

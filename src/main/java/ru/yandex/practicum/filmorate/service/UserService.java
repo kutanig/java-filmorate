@@ -5,11 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.exception.ConflictException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.RepositoryException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
-import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -19,7 +18,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class UserService {
-
     private final UserStorage userStorage;
 
     @Autowired
@@ -27,103 +25,82 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    void validateUsersData(UserDto user) {
-
-        Optional<User> currentUser = userStorage.getUserByEmail(user.getEmail());
-        if (currentUser.isPresent()) {
-            throw new ValidationException("Этот имейл уже используется");
-        }
+    // Унифицированная проверка email
+    private void validateEmailUniqueness(String email) {
+        userStorage.getUserByEmail(email).ifPresent(u -> {
+            throw new ConflictException("Email " + email + " уже занят");
+        });
     }
 
     public Collection<UserDto> getUsers() {
-        return userStorage.getUsers().stream().map(UserMapper::toDto).collect(Collectors.toList());
+        return userStorage.getUsers().stream()
+                .map(UserMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     public UserDto getUser(Long userId) {
-        Optional<User> user = userStorage.getUserById(userId);
-        if (user.isEmpty()) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-        }
-        return UserMapper.toDto(user.get());
+        User user = userStorage.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+        return UserMapper.toDto(user);
     }
 
-    public UserDto addUser(UserDto user) {
-        validateUsersData(user);
-        return UserMapper.toDto(userStorage.add(UserMapper.toUser(user)));
+    public UserDto addUser(UserDto userDto) {
+        validateEmailUniqueness(userDto.getEmail());
+        return UserMapper.toDto(userStorage.add(UserMapper.toUser(userDto)));
     }
 
     public UserDto updateUser(UserDto newUser) {
-        Optional<User> oldUser = userStorage.getUserById(newUser.getId());
-        if (oldUser.isEmpty()) {
-            throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
-        }
-        if (!Objects.equals(oldUser.get().getEmail(), newUser.getEmail())) {
-            Optional<User> currentUser = userStorage.getUserByEmail(newUser.getEmail());
-            if (currentUser.isPresent()) {
-                try {
-                    throw new RepositoryException("Этот имейл уже используется");
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+        User oldUser = userStorage.getUserById(newUser.getId())
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден"));
 
+        if (!oldUser.getEmail().equals(newUser.getEmail())) {
+            validateEmailUniqueness(newUser.getEmail());
         }
+
         return UserMapper.toDto(userStorage.update(UserMapper.toUser(newUser)));
     }
 
     public Boolean deleteUser(Long userId) {
-        Optional<User> user = userStorage.getUserById(userId);
-        if (user.isEmpty()) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-        }
+        userStorage.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         return userStorage.delete(userId);
     }
 
     public void addFriend(Long userId, Long friendId) {
-        Optional<User> user = userStorage.getUserById(userId);
-        if (user.isEmpty()) {
-            throw new NotFoundException("пользователя с id = " + userId + " нет");
+        if (userId.equals(friendId)) {
+            throw new ValidationException("Нельзя добавить самого себя в друзья");
         }
-        Optional<User> friend = userStorage.getUserById(friendId);
-        if (friend.isEmpty()) {
-            throw new NotFoundException("пользователя с id = " + friendId + " нет");
+        User user = userStorage.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+        User friend = userStorage.getUserById(friendId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
+
+        if (userStorage.findByFriendshipId(userId, friendId).isPresent() ||
+                userStorage.findByFriendshipId(friendId, userId).isPresent()) {
+            throw new ConflictException("Пользователи уже являются друзьями");
         }
-        Optional<Friendship> friendship = userStorage.findByFriendshipId(userId, friendId);
-        if (friendship.isPresent()) {
-            throw new NotFoundException("Пользователь с id = \" + userId + \" уже добавил пользователя \" + friendId + \"в друзья");
-        }
-        Optional<Friendship> friendship1 = userStorage.findByFriendshipId(friendId, userId);
-        if (friendship1.isPresent()) {
-            throw new NotFoundException("Пользователь с id = " + friendId + " уже добавил пользователя " + userId + "в друзья");
-        }
+
         userStorage.addFriend(userId, friendId);
     }
 
     public Collection<User> getFriends(Long userId) {
-        Optional<User> user = userStorage.getUserById(userId);
-        if (user.isEmpty()) {
-            throw new NotFoundException("пользователя с id = " + userId + " нет");
-        }
-
+        userStorage.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         return userStorage.getFriends(userId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
-        Optional<User> user = userStorage.getUserById(userId);
-        if (user.isEmpty()) {
-            throw new NotFoundException("пользователя с id = " + userId + " нет");
-        }
-        Optional<User> friend = userStorage.getUserById(friendId);
-        if (friend.isEmpty()) {
-            throw new NotFoundException("пользователя с id = " + friendId + " нет");
-        }
+        userStorage.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+        userStorage.getUserById(friendId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
         userStorage.deleteFriend(userId, friendId);
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
-        Set<User> secondFriends = new HashSet<>(getFriends(otherUserId));
-        return getFriends(userId).stream()
-                .filter(secondFriends::contains)
+        Set<User> friends = new HashSet<>(getFriends(userId));
+        return getFriends(otherUserId).stream()
+                .filter(friends::contains)
                 .collect(Collectors.toList());
     }
 }
