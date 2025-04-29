@@ -14,7 +14,7 @@ import java.util.Optional;
 public class FriendshipRepository extends BaseRepository<Friendship> {
 
     private static final String FIND_FRIENDS_QUERY = """
-            SELECT u.* 
+            SELECT u.*
             FROM users u
             JOIN friendships f ON u.id = f.friend_id
             WHERE f.user_id = ?""";
