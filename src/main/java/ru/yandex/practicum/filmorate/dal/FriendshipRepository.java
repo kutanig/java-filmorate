@@ -13,15 +13,18 @@ import java.util.Optional;
 @Repository
 public class FriendshipRepository extends BaseRepository<Friendship> {
 
-    private static final String FIND_FRIENDS_QUERY = "SELECT * FROM \"USER\" WHERE ID IN (SELECT FRIEND_ID FROM FRIENDSHIP WHERE USER_ID = ?)";
-    private static final String FIND_FRIENDSHIP = "SELECT * FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
-    private static final String INSERT_QUERY = "INSERT INTO FRIENDSHIP(USER_ID, FRIEND_ID, STATUS) VALUES (?, ?, ?)";
-    private static final String DELETE_FRIENDSHIP_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
+    private static final String FIND_FRIENDS_QUERY = """
+            SELECT u.* 
+            FROM users u
+            JOIN friendships f ON u.id = f.friend_id
+            WHERE f.user_id = ?""";
+    private static final String FIND_FRIENDSHIP = "SELECT * FROM friendships WHERE user_id = ? AND friend_id = ?";
+    private static final String INSERT_QUERY = "INSERT INTO friendships(user_id, friend_id, status) VALUES (?, ?, ?)";
+    private static final String DELETE_FRIENDSHIP_QUERY = "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?";
 
     public FriendshipRepository(JdbcTemplate jdbc, RowMapper<Friendship> mapper) {
         super(jdbc, mapper);
     }
-
 
     public Friendship addFriend(Friendship friendship) {
 
@@ -33,7 +36,6 @@ public class FriendshipRepository extends BaseRepository<Friendship> {
         );
         return friendship;
     }
-
 
     public Optional<Friendship> findByFriendshipId(long userId, long friendId) {
         return findOne(FIND_FRIENDSHIP, userId, friendId);

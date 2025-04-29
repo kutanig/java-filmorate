@@ -7,8 +7,8 @@ import ru.yandex.practicum.filmorate.model.FilmLike;
 
 @Repository
 public class FilmLikeRepository extends BaseRepository<FilmLike> {
-    private static final String INSERT_QUERY = "INSERT INTO FILM_LIKE(FILM_ID, USER_ID) VALUES (?, ?)";
-    private static final String DELETE_FILM_LIKE = "DELETE FROM FILM_LIKE WHERE FILM_ID = ? AND USER_ID = ?";
+    private static final String INSERT_QUERY = "INSERT INTO film_likes(film_id, user_id) VALUES (?, ?)";
+    private static final String DELETE_FILM_LIKE = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
 
     public FilmLikeRepository(JdbcTemplate jdbc, RowMapper<FilmLike> mapper) {
         super(jdbc, mapper);

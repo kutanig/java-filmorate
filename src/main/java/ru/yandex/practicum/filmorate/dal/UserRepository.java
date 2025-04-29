@@ -13,12 +13,12 @@ import java.util.Optional;
 public class UserRepository extends BaseRepository<User> {
 
 
-    private static final String FIND_ALL_QUERY = "SELECT * FROM \"USER\"";
-    private static final String FIND_BY_EMAIL_QUERY = "SELECT * FROM \"USER\" WHERE EMAIL = ?";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM \"USER\" WHERE ID = ?";
-    private static final String INSERT_QUERY = "INSERT INTO \"USER\"(NAME, LOGIN, EMAIL, BIRTHDAY) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE \"USER\" SET NAME = ?, LOGIN = ?, EMAIL = ?, BIRTHDAY = ? WHERE ID = ?";
-    private static final String DELETE_BY_ID_QUERY = "DELETE FROM \"USER\" WHERE ID = ?";
+    private static final String FIND_ALL_QUERY = "SELECT * FROM users";
+    private static final String FIND_BY_EMAIL_QUERY = "SELECT * FROM users WHERE email = ?";
+    private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";
+    private static final String INSERT_QUERY = "INSERT INTO users(name, login, email, birthday) VALUES (?, ?, ?, ?)";
+    private static final String UPDATE_QUERY = "UPDATE users SET name = ?, login = ?, email = ?, birthday = ? WHERE id = ?";
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM users WHERE id = ?";
 
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);

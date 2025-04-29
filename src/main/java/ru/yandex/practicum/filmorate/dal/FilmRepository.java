@@ -20,19 +20,34 @@ import java.util.stream.Collectors;
 public class FilmRepository extends BaseRepository<Film> {
 
     private static final String FIND_ALL_QUERY =
-            "SELECT f.*, m.NAME AS MPA_NAME, m.DESCRIPTION AS MPA_DESCRIPTION " +
-                    "FROM FILM f " +
-                    "JOIN MPA m ON f.MPA_ID = m.ID";
+            "SELECT f.*, m.name AS mpa_name, m.description AS mpa_description " +
+                    "FROM films f " +
+                    "JOIN mpa m ON f.mpa_id = m.id";
 
     private static final String FIND_BY_ID_QUERY =
-            FIND_ALL_QUERY + " WHERE f.ID = ?";
+            FIND_ALL_QUERY + " WHERE f.id = ?";
 
-    private static final String GET_LIKES_COUNT = "SELECT COUNT(*) FROM FILM_LIKE WHERE FILM_ID = ?";
-    private static final String INSERT_QUERY = "INSERT INTO FILM (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) VALUES (?, ?, ?, ?, ?)";
-    private static final String INSERT_FILM_GENRE = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE FILM SET NAME=?, DESCRIPTION=?, RELEASE_DATE=?, DURATION=?, MPA_ID=? WHERE ID=?";
-    private static final String DELETE_BY_ID_QUERY = "DELETE FROM FILM WHERE ID = ?";
-    private static final String DELETE_FILM_GENRES = "DELETE FROM FILM_GENRE WHERE FILM_ID = ?";
+    private static final String GET_LIKES_COUNT =
+            "SELECT COUNT(*) FROM film_likes WHERE film_id = ?";
+
+    private static final String INSERT_QUERY =
+            "INSERT INTO films (name, description, release_date, duration, mpa_id) " +
+                    "VALUES (?, ?, ?, ?, ?)";
+
+    private static final String INSERT_FILM_GENRE =
+            "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+
+    private static final String UPDATE_QUERY =
+            "UPDATE films SET " +
+                    "name=?, description=?, release_date=?, duration=?, mpa_id=? " +
+                    "WHERE id=?";
+
+    private static final String DELETE_BY_ID_QUERY =
+            "DELETE FROM films WHERE id = ?";
+
+    private static final String DELETE_FILM_GENRES =
+            "DELETE FROM film_genres WHERE film_id = ?";
+
 
     private final JdbcTemplate jdbc;
     private final RowMapper<Film> filmMapper;

@@ -11,13 +11,13 @@ import java.util.Optional;
 
 @Repository
 public class GenreRepository extends BaseRepository<Genre> {
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM GENRE WHERE ID = ?";
-    private static final String FIND_ALL_QUERY = "SELECT * FROM GENRE ORDER BY ID";
+    private static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE id = ?";
+    private static final String FIND_ALL_QUERY = "SELECT * FROM genres ORDER BY id";
     private static final String FIND_GENRES_OF_FILM = """
-            SELECT g.ID, g.NAME
-            FROM GENRE g
-            JOIN FILM_GENRE fg ON g.ID = fg.GENRE_ID
-            WHERE fg.FILM_ID = ?
+            SELECT g.id, g.name
+            FROM genres g
+            JOIN film_genres fg ON g.id = fg.genre_id
+            WHERE fg.film_id = ?
             """;
 
     private final JdbcTemplate jdbc;

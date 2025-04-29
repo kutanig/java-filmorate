@@ -1,4 +1,4 @@
-INSERT INTO MPA (NAME, DESCRIPTION)
+INSERT INTO mpa (NAME, DESCRIPTION)
 VALUES
   ('G', 'Нет возрастных ограничений'),
   ('PG', 'Рекомендуется присутствие родителей'),
@@ -6,7 +6,7 @@ VALUES
   ('R', 'Лицам до 17 лет обязательно присутствие взрослого'),
   ('NC-17', 'Лицам до 18 лет просмотр запрещен');
 
-INSERT INTO GENRE (NAME)
+INSERT INTO genres (NAME)
 VALUES
     ('Комедия'),
     ('Драма'),
