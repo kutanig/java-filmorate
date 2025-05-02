@@ -1,30 +1,23 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.ser.DurationSerializer;
-import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.annotation.MinimumDate;
+import lombok.NoArgsConstructor;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Film {
-    Long id;
-    @NotBlank(message = "Название не может быть пустым")
-    String name;
-    @Size(max = 200, message = "Максимальная длина описания — 200 символов")
-    String description;
-    @NotNull(message = "Дата релиза не может быть пустой")
-    @MinimumDate
-    LocalDate releaseDate;
-    @JsonSerialize(using = DurationSerializer.class)
-    @JsonFormat(shape = JsonFormat.Shape.NUMBER_INT)
-    @NotNull(message = "Не может быть пустым")
-    Duration duration;
-    private Set<Long> likes = new HashSet<>();
+    private Long id;
+    private String name;
+    private String description;
+    private LocalDate releaseDate;
+    private int duration;
+    private Mpa mpa;
+    private List<Genre> genres;
 }

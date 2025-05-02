@@ -1,14 +1,18 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
-import java.util.List;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/films")
@@ -17,38 +21,64 @@ public class FilmController {
     private final FilmService filmService;
 
     @GetMapping
-    public Collection<Film> filmsAll() {
-        return filmService.getAllFilms();
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<FilmDto> getAllFilms() {
+        return filmService.getFilms();
     }
 
-    @GetMapping("/{id}")
-    public Film getFilmById(@PathVariable Long id) {
-        return filmService.getFilmById(id);
+    @GetMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.OK)
+    public FilmDto getFilm(
+            @PathVariable @Positive(message = "ID фильма должен быть положительным числом") Long filmId
+    ) {
+        return filmService.getFilm(filmId);
     }
 
     @PostMapping
-    public Film addFilm(@RequestBody @Valid Film newFilm) {
-        return filmService.createFilm(newFilm);
+    @ResponseStatus(HttpStatus.CREATED)
+    public FilmDto createFilm(@Valid @RequestBody FilmDto filmDto) {
+        return filmService.addFilm(filmDto);
     }
 
     @PutMapping
-    public Film updateFilm(@RequestBody @Valid Film film) {
-        return filmService.updateFilm(film);
+    @ResponseStatus(HttpStatus.OK)
+    public FilmDto updateFilm(@Valid @RequestBody FilmDto filmDto) {
+        return filmService.updateFilm(filmDto);
     }
 
-    @PutMapping("/{id}/like/{userId}")
-    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
-        filmService.addLike(id, userId);
+    @DeleteMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteFilm(
+            @PathVariable @Positive(message = "ID фильма должен быть положительным числом") Long filmId
+    ) {
+        filmService.deleteFilm(filmId);
     }
 
-    @DeleteMapping("/{id}/like/{userId}")
-    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
-        filmService.removeLike(id, userId);
+    @PutMapping("/{filmId}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addLike(
+            @PathVariable @Positive(message = "ID фильма должен быть положительным числом") Long filmId,
+            @PathVariable @Positive(message = "ID пользователя должен быть положительным числом") Long userId
+    ) {
+        filmService.addLike(filmId, userId);
+    }
+
+    @DeleteMapping("/{filmId}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeLike(
+            @PathVariable @Positive(message = "ID фильма должен быть положительным числом") Long filmId,
+            @PathVariable @Positive(message = "ID пользователя должен быть положительным числом") Long userId
+    ) {
+        filmService.removeLike(filmId, userId);
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilms(
-            @RequestParam(defaultValue = "10") int count) {
-        return filmService.getPopularFilms(count);
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<FilmDto> getPopularFilms(
+            @RequestParam(defaultValue = "10") @Min(1) Integer count,
+            @RequestParam(defaultValue = "0") @Min(0) Integer from,
+            @RequestParam(defaultValue = "desc") String sort
+    ) {
+        return filmService.findMostPopular(count, from, sort);
     }
 }
